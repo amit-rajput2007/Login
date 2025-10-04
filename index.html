@@ -48,7 +48,7 @@
         const authTokenEndpoint = "https://login.salesforce.com/services/oauth2/token";
         // Generate the Salesforce Authorization URL
         const generateAuthUrl = () => {
-            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&scope=refresh_token`;
+            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&scope=refresh_token&state=mystate`;
             console.log("Authorization URL:", authUrl);
             return authUrl;
         };
