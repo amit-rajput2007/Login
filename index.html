@@ -40,129 +40,63 @@
         <div id="result"></div>
     </div>
 
-    <div id="cresult">
-        <a id="loginWithSalesforce" class="button" href="#">
-            result:
-        </a>
-        <div id="result"></div>
-    </div>
-
     <script>
         // Salesforce Configuration
         const clientId = "3MVG9XgkMlifdwVAPP1QzilrWxN4vxXanUxrP_wtiJKJMqA6GnZ1u41eQ.oP_8lPeh80GlG4byc0QpN3U2.84"; // Replace with the Consumer Key of your Salesforce Connected App
-        const redirectUri = "https://amit-rajput2007.github.io/Login";
-        const redirectUriNew = "https://login.salesforce.com/services/oauth2/success";// Replace with your app's URL (hosted on GitHub Pages)
+        const redirectUri = "https://amit-rajput2007.github.io/Login"; // Replace with your app's redirect URI
         const authEndpoint = "https://login.salesforce.com/services/oauth2/authorize"; // Use "test.salesforce.com" for Sandbox environments
-        const authTokenEndpoint = "https://login.salesforce.com/services/oauth2/token";
+
         // Generate the Salesforce Authorization URL
         const generateAuthUrl = () => {
-            const authUrl = `${authEndpoint}?response_type=hybrid_token&client_id=${clientId}&redirect_uri=${redirectUri}`;
+            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
             console.log("Authorization URL:", authUrl);
             return authUrl;
         };
 
-        // Parse the access token from the URL fragment
-        const getAccessTokenFromUrl = () => {
-
-            const hash = window.location.hash.substring(1); // Extract the part after the "#"
-            const params = new URLSearchParams(hash);
-            console.log('params ' + params);
-            authenticateSalesforceSession(params);
-            //return params.get("access_token");
-        };
-        const getRefreshToken = () => {
-
-            const hash = window.location.hash.substring(1); // Remove the "#" from the start
-
-            // Parse the parameters using URLSearchParams
-            const params = new URLSearchParams(hash);
-
-            // Retrieve the "refresh_token" value
-            const refreshToken = params.get("refresh_token");
-
-            console.log('refreshToken ' + refreshToken);
+        // Parse parameters from the URL fragment
+        const parseUrlParams = () => {
+            const hash = window.location.hash.substring(1); // Extract the fragment after the "#"
+            return new URLSearchParams(hash);
         };
 
-
-
-        // Use the Access Token to Make an API Call
-        const fetchDataFromSalesforce = (accessToken) => {
-            const salesforceApiUrl = "https://login.Salesforce.com/services/data/v57.0/sobjects/"; // Change this to the desired API endpoint
-
-            fetch(salesforceApiUrl, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
-            })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Error fetching data from Salesforce: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log("Fetched Data:", data);
-                    document.getElementById("result").innerHTML =
-                        "<h3>API Response:</h3><pre>" + JSON.stringify(data, null, 2) + "</pre>";
-                })
-                .catch((error) => {
-                    console.error(error);
-                    document.getElementById("result").innerHTML =
-                        "<p style='color: red;'>Error fetching data from Salesforce: " +
-                        error.message +
-                        "</p>";
-                });
+        // Set a session cookie for the Lightning domain
+        const setLightningCookie = (lightningSid, lightningDomain) => {
+            if (lightningSid && lightningDomain) {
+                document.cookie = `sid=${lightningSid}; path=/; domain=${lightningDomain}; secure; SameSite=None`;
+                console.log(`Lightning session cookie set for domain: ${lightningDomain}`);
+            } else {
+                console.error("Missing parameters: lightning_sid or lightning_domain");
+            }
         };
 
-        /*const getNewAccessToken = () => {
-            const salesforceAPIURL = "https://login.Salesforce.com/services/data/v57.0/sobjects/";
-            const client_id = '3MVG9XgkMlifdwVAPP1QzilrWxN4vxXanUxrP_wtiJKJMqA6GnZ1u41eQ.oP_8lPeh80GlG4byc0QpN3U2.84';
-            const client_secret = '6718620B8A4513CE318C18A789951D47EB0B18E931298F428B9C90F10DE44B56';
-            fetch(authTokenEndpoint, {
-                method: "POST",
-                headers: {
-                    Authorization: `Basic btoa(${client_id}:${client_secret})`,
-                    grant_type: refresh_token,
-                    refresh_token: "5Aep861JXR2zRHPQHJXR112b..livVq0wLvxGN_iz.FMbVet58EjlCjR3McYHLb0AfDmtlguMUUlChmTll16TXr",
+        // Process the received OAuth parameters
+        const processOAuthResponse = (params) => {
+            // Extract required parameters
+            const accessToken = params.get("access_token");
+            const lightningSid = params.get("lightning_sid");
+            const lightningDomain = params.get("lightning_domain");
 
+            if (accessToken) {
+                console.log("Access Token:", accessToken);
 
+                // Set the Lightning session cookie
+                setLightningCookie(lightningSid, lightningDomain);
 
+                // Redirect to frontdoor.jsp for Lightning domain authentication
+                const frontdoorUrl = `https://${lightningDomain}/secur/frontdoor.jsp?sid=${lightningSid}`;
+                console.log("Redirecting to Lightning frontdoor:", frontdoorUrl);
 
-                }
-
-            }).then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error fetching data from Salesforce: " + response.statusText);
-                }
-                console.log('REFRESH TOKEN' + response.json());
-                return response.json();
-            })
-        }*/
+                // Optional: Uncomment this line to automatically perform the redirect
+                window.location.href = frontdoorUrl;
+            } else {
+                console.error("Access Token is missing. Check the Salesforce response.");
+            }
+        };
 
         // Check for Access Token in URL on Page Load
-        const accessToken = getAccessTokenFromUrl();
-        const refreshToken = getRefreshToken();
-        if (accessToken) {
-            // User is returned from Salesforce with an access token
-            console.log("Access Token:", accessToken);
-
-            // Clear the URL fragment to avoid confusion (optional)
-            window.location.hash = "";
-
-            // Display the authorized status and fetch data
-            document.getElementById("content").innerHTML =
-                "<p style='color: green;'>Connected to Salesforce! Access Token: " +
-                accessToken +
-                "</p><button class='button' onclick='fetchDataFromSalesforce(`" +
-                accessToken +
-                "`)'>Fetch Salesforce Data</button>";
-
-            document.getElementById("content").innerHTML =
-                "<p style='color: green;'>Connected to Salesforce! Refresh Token: " +
-                accessToken +
-                "</p><button class='button' onclick='getNewAccessToken()'>Fetch Refresh Data</button>";
+        const params = parseUrlParams();
+        if (params.has("access_token")) {
+            processOAuthResponse(params);
         } else {
             // User is not logged in, show the login button
             document
