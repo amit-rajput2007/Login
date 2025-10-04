@@ -58,8 +58,19 @@
 
             const hash = window.location.hash.substring(1); // Extract the part after the "#"
             const params = new URLSearchParams(hash);
-            console.log(params.get("refresh_token"));
             return params.get("access_token");
+        };
+        const getRefreshToken = () => {
+
+            const hash = window.location.hash.substring(1); // Remove the "#" from the start
+
+            // Parse the parameters using URLSearchParams
+            const params = new URLSearchParams(hash);
+
+            // Retrieve the "refresh_token" value
+            const refreshToken = params.get("refresh_token");
+
+            console.log('refreshToken ' + refreshToken);
         };
 
         // Use the Access Token to Make an API Call
@@ -114,6 +125,7 @@
 
         // Check for Access Token in URL on Page Load
         const accessToken = getAccessTokenFromUrl();
+        const refreshToken = getRefreshToken();
         if (accessToken) {
             // User is returned from Salesforce with an access token
             console.log("Access Token:", accessToken);
