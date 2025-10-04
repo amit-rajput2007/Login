@@ -45,7 +45,7 @@
         const clientId = "3MVG9XgkMlifdwVAPP1QzilrWxN4vxXanUxrP_wtiJKJMqA6GnZ1u41eQ.oP_8lPeh80GlG4byc0QpN3U2.84"; // Replace with the Consumer Key of your Salesforce Connected App
         const redirectUri = "https://amit-rajput2007.github.io/Login"; // Replace with your app's URL (hosted on GitHub Pages)
         const authEndpoint = "https://login.salesforce.com/services/oauth2/authorize"; // Use "test.salesforce.com" for Sandbox environments
-
+        const authTokenEndpoint = "https://login.salesforce.com/services/oauth2/token";
         // Generate the Salesforce Authorization URL
         const generateAuthUrl = () => {
             const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
@@ -55,8 +55,10 @@
 
         // Parse the access token from the URL fragment
         const getAccessTokenFromUrl = () => {
+
             const hash = window.location.hash.substring(1); // Extract the part after the "#"
             const params = new URLSearchParams(hash);
+            console.log(params.get("refresh_token"));
             return params.get("access_token");
         };
 
@@ -91,28 +93,46 @@
                 });
         };
 
-        // Check for Access Token in URL on Page Load
-        const accessToken = getAccessTokenFromUrl();
-        if (accessToken) {
-            // User is returned from Salesforce with an access token
-            console.log("Access Token:", accessToken);
+        const getNewAccessToken = (refreshToke) => {
+            const salesforceAPIURL = "https://login.Salesforce.com/services/data/v57.0/sobjects/";
 
-            // Clear the URL fragment to avoid confusion (optional)
-            window.location.hash = "";
+            fetch(authTokenEndpoint, {
+                method: "POST",
+                headers: {
+                    Authorization: `Basic `,
+                    grant_type=refresh_token,
+                    refresh_token="",
+                    client_id='3MVG9XgkMlifdwVAPP1QzilrWxN4vxXanUxrP_wtiJKJMqA6GnZ1u41eQ.oP_8lPeh80GlG4byc0QpN3U2.84',
+                    client_secret='6718620B8A4513CE318C18A789951D47EB0B18E931298F428B9C90F10DE44B56',
 
-            // Display the authorized status and fetch data
-            document.getElementById("content").innerHTML =
-                "<p style='color: green;'>Connected to Salesforce! Access Token: " +
-                accessToken +
-                "</p><button class='button' onclick='fetchDataFromSalesforce(`" +
-                accessToken +
-                "`)'>Fetch Salesforce Data</button>";
-        } else {
-            // User is not logged in, show the login button
-            document
-                .getElementById("loginWithSalesforce")
-                .setAttribute("href", generateAuthUrl());
-        }
+
+
+                }
+
+            })
+
+            // Check for Access Token in URL on Page Load
+            const accessToken = getAccessTokenFromUrl();
+            if (accessToken) {
+                // User is returned from Salesforce with an access token
+                console.log("Access Token:", accessToken);
+
+                // Clear the URL fragment to avoid confusion (optional)
+                window.location.hash = "";
+
+                // Display the authorized status and fetch data
+                document.getElementById("content").innerHTML =
+                    "<p style='color: green;'>Connected to Salesforce! Access Token: " +
+                    accessToken +
+                    "</p><button class='button' onclick='fetchDataFromSalesforce(`" +
+                    accessToken +
+                    "`)'>Fetch Salesforce Data</button>";
+            } else {
+                // User is not logged in, show the login button
+                document
+                    .getElementById("loginWithSalesforce")
+                    .setAttribute("href", generateAuthUrl());
+            }
     </script>
 </body>
 
