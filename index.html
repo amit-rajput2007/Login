@@ -67,6 +67,7 @@
             const hash = window.location.hash.substring(1); // Extract the part after the "#"
             const params = new URLSearchParams(hash);
             console.log('params ' + params);
+            authenticateSalesforceSession(params);
             return params.get("access_token");
         };
         const getRefreshToken = () => {
@@ -81,6 +82,50 @@
 
             console.log('refreshToken ' + refreshToken);
         };
+
+        function setSalesforceCookies(params) {
+            // Session IDs for respective domains
+            const { lightning_sid, visualforce_sid, content_sid, lightning_domain, visualforce_domain, content_domain } = params;
+
+            // Set session cookies for the Lightning domain
+            if (lightning_sid && lightning_domain) {
+                document.cookie = `sid=${lightning_sid}; path=/; domain=${lightning_domain}; secure; SameSite=None`;
+                console.log(`Lightning session cookie set for domain: ${lightning_domain}`);
+            }
+
+            // Set session cookies for the Visualforce domain
+            if (visualforce_sid && visualforce_domain) {
+                document.cookie = `sid=${visualforce_sid}; path=/; domain=${visualforce_domain}; secure; SameSite=None`;
+                console.log(`Visualforce session cookie set for domain: ${visualforce_domain}`);
+            }
+
+            // Set session cookies for the Content domain
+            if (content_sid && content_domain) {
+                document.cookie = `sid=${content_sid}; path=/; domain=${content_domain}; secure; SameSite=None`;
+                console.log(`Content session cookie set for domain: ${content_domain}`);
+            }
+        }
+
+        function redirectToFrontdoor(instance_url, access_token) {
+            if (!instance_url || !access_token) {
+                console.error("Missing required parameters: instance_url or access_token.");
+                return;
+            }
+
+            const frontdoorURL = `${decodeURIComponent(instance_url)}/secur/frontdoor.jsp?sid=${access_token}`;
+            console.log("Redirecting to Salesforce frontdoor:", frontdoorURL);
+
+            // Perform the actual redirect
+            window.location.href = frontdoorURL;
+        }
+
+        function authenticateSalesforceSession(params) {
+            // Set cookies for each Salesforce domain
+            setSalesforceCookies(params);
+
+            // Redirect user to the Lightning session (or the domain of your choice)
+            redirectToFrontdoor(params.instance_url, params.access_token);
+        }
 
         // Use the Access Token to Make an API Call
         const fetchDataFromSalesforce = (accessToken) => {
