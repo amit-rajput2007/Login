@@ -48,7 +48,7 @@
 
         // Generate the Salesforce Authorization URL
         const generateAuthUrl = () => {
-            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
+            const authUrl = `${authEndpoint}?response_type=hybrid_token&client_id=${clientId}&redirect_uri=${redirectUri}`;
             console.log("Authorization URL:", authUrl);
             return authUrl;
         };
@@ -111,7 +111,7 @@
         } else {
             // Show login button if no token is present
             const generateAuthUrl = () => {
-                const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
+                const authUrl = `${authEndpoint}?response_type=hybrid_token&client_id=${clientId}&redirect_uri=${redirectUri}`;
                 return authUrl;
             };
 
