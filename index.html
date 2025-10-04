@@ -95,7 +95,8 @@
 
         // Check for Access Token in URL on Page Load
         const params = parseUrlParams();
-        console.log('###params ', params);
+        console.log('###params ', JSON.stringify(params));
+
         if (params.has("access_token")) {
             // processOAuthResponse(params);
         } else {
