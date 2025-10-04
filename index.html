@@ -53,31 +53,42 @@
             return authUrl;
         };
 
-        // Parse parameters from the URL fragment
         const parseUrlParams = () => {
             const hash = window.location.hash.substring(1); // Extract the fragment after the "#"
             return new URLSearchParams(hash);
         };
 
         // Set a session cookie for the Lightning domain
-        const setLightningCookie = (lightningSid, lightningDomain) => {
-            if (lightningSid && lightningDomain) {
-                document.cookie = `sid=${lightningSid}; path=/; domain=${lightningDomain}; secure; SameSite=None`;
+        const setLightningCookie = (sid, lightningDomain) => {
+            if (sid && lightningDomain) {
+                document.cookie = `sid=${sid}; path=/; domain=${lightningDomain}; secure; SameSite=None`;
                 console.log(`Lightning session cookie set for domain: ${lightningDomain}`);
             } else {
                 console.error("Missing parameters: lightning_sid or lightning_domain");
             }
         };
 
+        // Derive Lightning Domain from instance_url
+        const deriveLightningDomain = (instanceUrl) => {
+            const url = new URL(instanceUrl);
+            const domainParts = url.hostname.split(".");
+            const baseDomain = domainParts[0]; // e.g. "your-instance"
+            return `${baseDomain}.lightning.force.com`;
+        };
+
         // Process the received OAuth parameters
         const processOAuthResponse = (params) => {
             // Extract required parameters
             const accessToken = params.get("access_token");
-            const lightningSid = params.get("lightning_sid");
-            const lightningDomain = params.get("lightning_domain");
+            const instanceUrl = params.get("instance_url");
 
-            if (accessToken) {
-                console.log("Access Token:", accessToken);
+            if (accessToken && instanceUrl) {
+                // Derive values dynamically
+                const lightningSid = accessToken; // Use access_token as the sid
+                const lightningDomain = deriveLightningDomain(instanceUrl);
+
+                console.log("Derived Lightning Domain:", lightningDomain);
+                console.log("Using Lightning SID (from access_token):", lightningSid);
 
                 // Set the Lightning session cookie
                 setLightningCookie(lightningSid, lightningDomain);
@@ -86,21 +97,24 @@
                 const frontdoorUrl = `https://${lightningDomain}/secur/frontdoor.jsp?sid=${lightningSid}`;
                 console.log("Redirecting to Lightning frontdoor:", frontdoorUrl);
 
-                // Optional: Uncomment this line to automatically perform the redirect
+                // Optional: Uncomment this line to perform the redirect automatically
                 window.location.href = frontdoorUrl;
             } else {
-                console.error("Access Token is missing. Check the Salesforce response.");
+                console.error("Missing required parameters: access_token or instance_url");
             }
         };
 
         // Check for Access Token in URL on Page Load
         const params = parseUrlParams();
-        console.log('###params ', params);
-
         if (params.has("access_token")) {
-            // processOAuthResponse(params);
+            processOAuthResponse(params);
         } else {
-            // User is not logged in, show the login button
+            // Show login button if no token is present
+            const generateAuthUrl = () => {
+                const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}`;
+                return authUrl;
+            };
+
             document
                 .getElementById("loginWithSalesforce")
                 .setAttribute("href", generateAuthUrl());
