@@ -43,12 +43,13 @@
     <script>
         // Salesforce Configuration
         const clientId = "3MVG9XgkMlifdwVAPP1QzilrWxN4vxXanUxrP_wtiJKJMqA6GnZ1u41eQ.oP_8lPeh80GlG4byc0QpN3U2.84"; // Replace with the Consumer Key of your Salesforce Connected App
-        const redirectUri = "https://amit-rajput2007.github.io/Login"; // Replace with your app's URL (hosted on GitHub Pages)
+        const redirectUri = "https://amit-rajput2007.github.io/Login";
+        const redirectUriNew = "https://login.salesforce.com/services/oauth2/success";// Replace with your app's URL (hosted on GitHub Pages)
         const authEndpoint = "https://login.salesforce.com/services/oauth2/authorize"; // Use "test.salesforce.com" for Sandbox environments
         const authTokenEndpoint = "https://login.salesforce.com/services/oauth2/token";
         // Generate the Salesforce Authorization URL
         const generateAuthUrl = () => {
-            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&scope=refresh_token&state=mystate`;
+            const authUrl = `${authEndpoint}?response_type=token&client_id=${clientId}&redirect_uri=${redirectUriNew}&scope=refresh_token&state=mystate`;
             console.log("Authorization URL:", authUrl);
             return authUrl;
         };
